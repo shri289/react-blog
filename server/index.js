@@ -15,7 +15,11 @@ mongoose.connect(config.mongoURI,
  
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
- app.use(cookieParser());              
+ app.use(cookieParser());   
+ 
+ app.get('/', (req, res) => {
+   res.json({"hello": "i am happy to deploy our application on heroku"})
+ })
 
 app.get('/api/user/auth', auth,(req, res) => {
 res.status(200).json({
