@@ -1,10 +1,14 @@
 const mongoose = require('mongoose');
-const userSchema = require('bcrypt');
+const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 const userSchema = mongoose.Schema({
 
     name: {
+        type: String,
+        maxlength: 50
+    },
+    lastname: {
         type: String,
         maxlength: 50
     },
@@ -16,10 +20,6 @@ const userSchema = mongoose.Schema({
     password: {
         type: String,
         minlength: 5
-    },
-    lastname: {
-        type: String,
-        maxlength: 50
     },
     role: {
         type: Number,
@@ -39,12 +39,13 @@ userSchema.pre('save', function(next) {
 
     if(user.isModified('password')) {
 
-           bcrypt.genSaltSync(saltRounds, function(err, salt) {
+           bcrypt.genSalt(saltRounds, function(err, salt) {
         if(err) return next(err);
 
         bcrypt.hash(user.password, salt, function(err, hash){
             if(err) return next(err);
             user.password = hash
+            next()
         })
     })
 } else {
@@ -71,6 +72,17 @@ userSchema.methods.generateToken = function(cb) {
     })
 }
 
+
+userSchema.statics.findByToken = function (token, cb) {
+    var user = this;
+
+    jwt.verify(token, 'secret',function(err, decode){
+        user.findOne({"_id":decode, "token":token}, function(err, user){
+            if(err) return cb(err);
+            cb(null, user);
+        })
+    })
+}
 
 const User = mongoose.model('User', userSchema)
 
